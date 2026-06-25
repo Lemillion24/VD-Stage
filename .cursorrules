@@ -1,0 +1,808 @@
+{
+  "project": {
+    "name": "Parking Management System",
+    "version": "1.0.0",
+    "type": "Backend + Frontend (Architecture séparée)",
+    "description": "Système complet de gestion de parking avec API REST (FastAPI) et 3 applications frontend (React + TypeScript)",
+    "architecture": "Backend API REST + Frontend Web (séparés)",
+    "author": "Harry'son BAGEYA"
+  },
+
+  "task": {
+    "objective": "Développer un système de gestion de parking avec architecture Backend (API) + Frontend (React)",
+    "priority": "HAUTE",
+    "complexity": "ÉLEVÉE",
+    "deliverables": [
+      "Backend API REST complète (FastAPI)",
+      "Frontend Agent App (React + TypeScript)",
+      "Frontend Client App (React + TypeScript)",
+      "Frontend Admin App (React + TypeScript)",
+      "Base de données PostgreSQL avec migrations Alembic",
+      "Tests unitaires backend + frontend",
+      "Configuration Docker + docker-compose",
+      "Documentation API complète"
+    ]
+  },
+
+  "architecture": {
+    "pattern": "Backend + Frontend séparés",
+    "structure": {
+      "backend": {
+        "folder": "backend/",
+        "tech": "Python + FastAPI",
+        "role": "API REST (Backend uniquement)",
+        "components": [
+          "src/config/ - Pydantic Settings",
+          "src/constants/ - Enums (payment_methods, vehicle_types)",
+          "src/database/ - SQLAlchemy ORM + Repositories",
+          "src/exceptions/ - Custom exceptions métier",
+          "src/models/ - ORM SQLAlchemy (Ticket, Place, Parking, Vehicule, Employee)",
+          "src/schemas/ - Validation Pydantic (Request/Response)",
+          "src/services/ - Business logic (CheckIn, CheckOut, Payment, RateCalculator)",
+          "src/utils/ - Helpers (currency, datetime)",
+          "src/api/ - FastAPI Routes (check_in.py, check_out.py, payment.py, admin.py)"
+        ]
+      },
+      "frontend": {
+        "folder": "frontend/",
+        "tech": "TypeScript + React + Vite",
+        "role": "Applications Web UX",
+        "apps": [
+          {
+            "name": "agent-app",
+            "folder": "frontend/agent-app/",
+            "port": 3000,
+            "users": "Agents de parking",
+            "features": ["Check-In", "Check-Out", "Payment", "Voir tickets", "Voir places"]
+          },
+          {
+            "name": "client-app",
+            "folder": "frontend/client-app/",
+            "port": 3001,
+            "users": "Clients utilisateurs",
+            "features": ["Voir ticket", "Payment"]
+          },
+          {
+            "name": "admin-app",
+            "folder": "frontend/admin-app/",
+            "port": 3002,
+            "users": "Administrateurs",
+            "features": ["Dashboard", "Parkings", "Tickets", "Employés", "Tarifs", "Reports"]
+          }
+        ]
+      },
+      "docker": {
+        "folder": "docker/",
+        "files": ["docker-compose.yml", "nginx/nginx.conf"],
+        "role": "Orchestration des 5 services (backend + agent + client + admin + postgres)"
+      }
+    }
+  },
+
+  "tech_stack": {
+    "backend": {
+      "language": "Python 3.11+",
+      "framework": "FastAPI 0.104.1",
+      "orm": "SQLAlchemy 2.0.23",
+      "database": "PostgreSQL 14",
+      "migrations": "Alembic 1.13.0",
+      "validation": "Pydantic 2.5.2",
+      "testing": "pytest 7.4.3 + pytest-asyncio",
+      "logging": "loguru 0.7.2",
+      "auth": "python-jose + passlib"
+    },
+    "frontend": {
+      "language": "TypeScript 5.3.2",
+      "framework": "React 18.2.0",
+      "build": "Vite 5.0.8",
+      "http": "axios 1.6.2",
+      "query": "React Query 4.13.0",
+      "router": "React Router DOM 6.20.0",
+      "testing": "Vitest 0.34.6"
+    },
+    "deployment": {
+      "container": "Docker + Docker-compose",
+      "proxy": "Nginx (Reverse Proxy)",
+      "ports": {
+        "backend": 8000,
+        "agent-app": 3000,
+        "client-app": 3001,
+        "admin-app": 3002,
+        "nginx": 80,
+        "postgres": 5432
+      }
+    }
+  },
+
+  "backend_endpoints": {
+    "base_url": "http://localhost:8000",
+    "docs": "http://localhost:8000/docs",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/",
+        "description": "Root endpoint - Info API"
+      },
+      {
+        "method": "POST",
+        "path": "/api/check-in",
+        "description": "Check-in - Faire entrer un véhicule",
+        "request": {
+          "plate_number": "string",
+          "parking_id": "number",
+          "vehicle_type": "string (optionnel)",
+          "owner_name": "string (optionnel)"
+        },
+        "response": {
+          "success": "boolean",
+          "ticket_id": "string",
+          "place_number": "string",
+          "entry_time": "string (ISO)",
+          "message": "string"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/check-out",
+        "description": "Check-out - Calculator amount pour sortie",
+        "request": {
+          "ticket_id": "string"
+        },
+        "response": {
+          "success": "boolean",
+          "ticket_id": "string",
+          "duration_minutes": "number",
+          "amount": "number",
+          "exit_time": "string (ISO)",
+          "message": "string"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/payment",
+        "description": "Payment - Traiter paiement",
+        "request": {
+          "ticket_id": "string",
+          "payment_method": "string (cash/card/mobile_money)"
+        },
+        "response": {
+          "success": "boolean",
+          "ticket_id": "string",
+          "amount": "number",
+          "payment_method": "string",
+          "transaction_id": "string",
+          "message": "string"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/tarifs",
+        "description": "Get info tarifs",
+        "response": {
+          "tarif_horaire": 500.0,
+          "tarif_journalier": 3000.0,
+          "delai_grace_minutes": 15,
+          "description": "string"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/parkings",
+        "description": "Get tous les parkings avec places disponibles"
+      },
+      {
+        "method": "GET",
+        "path": "/api/ticket/{ticket_id}",
+        "description": "Get info ticket completo"
+      }
+    ]
+  },
+
+  "business_rules": {
+    "tarifs": {
+      "TARIF_HORAIRE": 500.0,
+      "TARIF_JOURNALIER": 3000.0,
+      "DELAI_GRACE": 15,
+      "TAXE_PARKING": 0.10
+    },
+    "formula": "hours * 500 * pricing_factor * 1.10",
+    "rules": [
+      "15 minutes = gratuit (délai de grâce)",
+      "500 FC/heure (tarif horaire)",
+      "3000 FC/jour max (tarif journalier)",
+      "10% taxe parking incluse",
+      "Pricing factor selon type: motorbike=0.5, sedan=1.0, suv=1.2, truck=1.5"
+    ],
+    "payment_methods": ["cash", "card", "mobile_money", "qr_code"],
+    "vehicle_types": ["motorbike", "compact", "sedan", "suv", "truck"],
+    "ticket_statuses": ["active", "paid", "expired"],
+    "exceptions": {
+      "ParkingFullException": "400 - Parking plein",
+      "VehicleAlreadyInsideException": "400 - Véhicule déjà inside",
+      "TicketNotFoundException": "404 - Ticket non trouvé",
+      "TicketAlreadyPaidException": "400 - Ticket déjà payé",
+      "PaymentFailedException": "500 - Paiement échoué"
+    }
+  },
+
+  "database_schema": {
+    "tables": [
+      {
+        "name": "parking",
+        "columns": [
+          {"name": "id", "type": "Integer", "pk": true},
+          {"name": "name", "type": "String(100)", "required": true},
+          {"name": "address", "type": "String(200)"},
+          {"name": "total_places", "type": "Integer", "required": true},
+          {"name": "is_active", "type": "Boolean", "default": true},
+          {"name": "created_at", "type": "DateTime"}
+        ]
+      },
+      {
+        "name": "places",
+        "columns": [
+          {"name": "id", "type": "Integer", "pk": true},
+          {"name": "place_number", "type": "String(20)", "unique": true},
+          {"name": "parking_id", "type": "Integer", "fk": "parking.id"},
+          {"name": "place_type", "type": "String(20)", "default": "standard"},
+          {"name": "is_occupied", "type": "Boolean", "default": false},
+          {"name": "is_available", "type": "Boolean", "default": true}
+        ]
+      },
+      {
+        "name": "vehicules",
+        "columns": [
+          {"name": "id", "type": "Integer", "pk": true},
+          {"name": "plate_number", "type": "String(20)", "unique": true, "index": true},
+          {"name": "vehicle_type", "type": "String(20)", "required": true},
+          {"name": "owner_name", "type": "String(100)"},
+          {"name": "is_active", "type": "Boolean", "default": true},
+          {"name": "created_at", "type": "DateTime"}
+        ]
+      },
+      {
+        "name": "tickets",
+        "columns": [
+          {"name": "id", "type": "Integer", "pk": true},
+          {"name": "ticket_id", "type": "String(50)", "unique": true, "index": true},
+          {"name": "vehicule_id", "type": "Integer", "fk": "vehicules.id"},
+          {"name": "place_id", "type": "Integer", "fk": "places.id"},
+          {"name": "entry_time", "type": "DateTime", "required": true},
+          {"name": "exit_time", "type": "DateTime"},
+          {"name": "duration_minutes", "type": "Integer", "default": 0},
+          {"name": "amount", "type": "Float", "default": 0},
+          {"name": "status", "type": "String(20)", "default": "active"},
+          {"name": "payment_method", "type": "String(20)"},
+          {"name": "is_paid", "type": "Boolean", "default": false}
+        ]
+      },
+      {
+        "name": "employees",
+        "columns": [
+          {"name": "id", "type": "Integer", "pk": true},
+          {"name": "employee_id", "type": "String(50)", "unique": true, "index": true},
+          {"name": "name", "type": "String(100)", "required": true},
+          {"name": "email", "type": "String(100)", "unique": true},
+          {"name": "password_hash", "type": "String(255)", "required": true},
+          {"name": "role", "type": "String(20)", "default": "agent"},
+          {"name": "parking_id", "type": "Integer", "fk": "parking.id"},
+          {"name": "is_active", "type": "Boolean", "default": true},
+          {"name": "created_at", "type": "DateTime"}
+        ]
+      }
+    ]
+  },
+
+  "frontend_components": {
+    "agent_app": {
+      "pages": [
+        "Dashboard.tsx - Dashboard agent (stats, places disponibles)",
+        "CheckIn.tsx - Formulaire check-in (plaque, parking, type véhicule)",
+        "CheckOut.tsx - Formulaire check-out (ticket ID, voir amount)",
+        "Payment.tsx - Formulaire payment (ticket ID, mode paiement)",
+        "Tickets.tsx - Liste tickets actifs",
+        "Settings.tsx - Configuration (tarifs, parkings)"
+      ],
+      "components": [
+        "CheckInForm.tsx - Formulaire check-in",
+        "CheckOutForm.tsx - Formulaire check-out",
+        "PaymentForm.tsx - Formulaire payment",
+        "TicketList.tsx - Liste tickets",
+        "ParkingInfo.tsx - Info parking (places)",
+        "Navbar.tsx - Navigation"
+      ],
+      "services": [
+        "api.ts - HTTP client (axios)",
+        "checkIn.ts - API check-in",
+        "checkOut.ts - API check-out",
+        "payment.ts - API payment",
+        "admin.ts - API admin"
+      ],
+      "hooks": [
+        "useCheckIn.ts - Hook custom check-in",
+        "useCheckOut.ts - Hook custom check-out",
+        "usePayment.ts - Hook custom payment"
+      ]
+    },
+    "client_app": {
+      "pages": [
+        "Home.tsx - Accueil (entres ticket ID)",
+        "TicketInfo.tsx - Voir info ticket",
+        "Payment.tsx - Payment"
+      ],
+      "components": [
+        "TicketInfo.tsx - Info ticket",
+        "PaymentForm.tsx - Formulaire payment",
+        "Navbar.tsx - Navigation"
+      ]
+    },
+    "admin_app": {
+      "pages": [
+        "Dashboard.tsx - Dashboard admin (stats globales)",
+        "Parkings.tsx - Gestion parkings (CRUD)",
+        "Tickets.tsx - Liste tous tickets",
+        "Employees.tsx - Gestion employés (CRUD)",
+        "Tarifs.tsx - Configuration tarifs",
+        "Reports.tsx - Reports (export CSV, PDF)"
+      ]
+    }
+  },
+
+  "implementation_steps": [
+    {
+      "step": 1,
+      "title": "Créer arborescence Backend",
+      "folder": "backend/",
+      "actions": [
+        "Créer backend/ avec tous les dossiers (src/config, src/constants, src/database, etc.)",
+        "Créer backend/src/__init__.py",
+        "Créer backend/requirements.txt",
+        "Créer backend/alembic.ini",
+        "Créer backend/Dockerfile",
+        "Créer backend/.env.example"
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Implémenter Backend - Configuration",
+      "folder": "backend/src/config/",
+      "files": ["settings.py"],
+      "code": "Créer Pydantic Settings avec TARIF_HORAIRE=500, TARIF_JOURNALIER=3000, DELAI_GRACE=15, TAXE=0.10, DATABASE_URL"
+    },
+    {
+      "step": 3,
+      "title": "Implémenter Backend - Constants + Exceptions",
+      "folder": "backend/src/",
+      "files": [
+        "constants/payment_methods.py (Enum)",
+        "constants/vehicle_types.py (Enum + pricing)",
+        "exceptions/parking.py (ParkingFullException, SpotNotFoundException, etc.)",
+        "exceptions/payment.py (TicketAlreadyPaidException, PaymentFailedException, etc.)"
+      ]
+    },
+    {
+      "step": 4,
+      "title": "Implémenter Backend - Database",
+      "folder": "backend/src/database/",
+      "files": [
+        "db_connection.py (engine SQLAlchemy, Session, Base, get_db, init_db)",
+        "repositories.py (VehiculeRepository, PlaceRepository, ParkingRepository, TicketRepository, EmployeeRepository avec CRUD)"
+      ]
+    },
+    {
+      "step": 5,
+      "title": "Implémenter Backend - Models ORM",
+      "folder": "backend/src/models/",
+      "files": [
+        "parking.py (class Parking)",
+        "place.py (class Place)",
+        "vehicule.py (class Vehicule)",
+        "ticket.py (class Ticket)",
+        "employee.py (class Employee)"
+      ],
+      "code": "SQLAlchemy ORM avec relations, pk, fk, unique, index"
+    },
+    {
+      "step": 6,
+      "title": "Implémenter Backend - Utils",
+      "folder": "backend/src/utils/",
+      "files": [
+        "currency.py (format_currency, round_amount, apply_tax, calculate_total)",
+        "datetime.py (generate_ticket_id, calculate_duration_minutes, format_datetime)"
+      ]
+    },
+    {
+      "step": 7,
+      "title": "Implémenter Backend - Rate Calculator",
+      "folder": "backend/src/services/",
+      "files": ["rate_calculator.py"],
+      "code": "Classe RateCalculator avec calculate(duration_minutes, vehicle_type) selon règles business"
+    },
+    {
+      "step": 8,
+      "title": "Implémenter Backend - Services Métier",
+      "folder": "backend/src/services/",
+      "files": [
+        "check_in.py (CheckInService.check_in() - crée ticket, occupe place)",
+        "check_out.py (CheckOutService.get_check_out_amount() - calc amount)",
+        "payment.py (PaymentService.process_payment() - traite payment, libère place)"
+      ]
+    },
+    {
+      "step": 9,
+      "title": "Implémenter Backend - Schemas Pydantic",
+      "folder": "backend/src/schemas/",
+      "files": [
+        "check_in.py (CheckInRequest, CheckInResponse)",
+        "check_out.py (CheckOutRequest, CheckOutResponse)",
+        "payment.py (PaymentRequest, PaymentResponse)"
+      ]
+    },
+    {
+      "step": 10,
+      "title": "Implémenter Backend - API Routes",
+      "folder": "backend/src/api/",
+      "files": [
+        "router.py (Central APIRouter qui include check_in_router, check_out_router, payment_router, admin_router)",
+        "check_in.py (POST /api/check-in endpoint)",
+        "check_out.py (POST /api/check-out endpoint)",
+        "payment.py (POST /api/payment endpoint)",
+        "admin.py (GET /api/admin/tarifs, GET /api/admin/parkings, GET /api/admin/ticket/{id})"
+      ]
+    },
+    {
+      "step": 11,
+      "title": "Implémenter Backend - Main",
+      "folder": "backend/",
+      "files": ["main.py"],
+      "code": "FastAPI app avec CORS middleware, include api_router, startup/shutdown events, uvicorn.run()"
+    },
+    {
+      "step": 12,
+      "title": "Implémenter Backend - Tests",
+      "folder": "tests/backend/",
+      "files": [
+        "test_payment.py (RateCalculator tests: 15min=0, 60min=550, 420min=3000)",
+        "test_check_in.py (CheckInService tests)",
+        "test_check_out.py (CheckOutService tests)",
+        "test_api.py (FastAPI test client)"
+      ]
+    },
+    {
+      "step": 13,
+      "title": "Créer arborescence Frontend",
+      "folder": "frontend/",
+      "actions": [
+        "Créer frontend/agent-app/ avec Vite + React + TypeScript",
+        "Créer frontend/client-app/ avec Vite + React + TypeScript",
+        "Créer frontend/admin-app/ avec Vite + React + TypeScript",
+        "Créer frontend/shared/ (types + utils communs)",
+        "Créer frontend/agent-app/package.json, tsconfig.json, vite.config.ts",
+        "Créer frontend/client-app/package.json, tsconfig.json, vite.config.ts",
+        "Créer frontend/admin-app/package.json, tsconfig.json, vite.config.ts"
+      ]
+    },
+    {
+      "step": 14,
+      "title": "Implémenter Frontend - Shared Types",
+      "folder": "frontend/shared/types/",
+      "files": [
+        "ticket.ts (CheckInRequest, CheckInResponse, CheckOutRequest, CheckOutResponse, PaymentRequest, PaymentResponse, Ticket)",
+        "parking.ts (Parking, Place)",
+        "vehicle.ts (Vehicule, VehicleType)"
+      ]
+    },
+    {
+      "step": 15,
+      "title": "Implémenter Frontend - Agent App",
+      "folder": "frontend/agent-app/",
+      "actions": [
+        "Créer src/services/api.ts (axios client baseURL=http://localhost:8000)",
+        "Créer src/services/checkIn.ts (checkIn() function)",
+        "Créer src/services/checkOut.ts (getCheckOutAmount() function)",
+        "Créer src/services/payment.ts (processPayment() function)",
+        "Créer src/hooks/useCheckIn.ts (React Query hook)",
+        "Créer src/hooks/useCheckOut.ts (React Query hook)",
+        "Créer src/hooks/usePayment.ts (React Query hook)",
+        "Créer src/pages/Dashboard.tsx",
+        "Créer src/pages/CheckIn.tsx (formulaire check-in)",
+        "Créer src/pages/CheckOut.tsx (formulaire check-out)",
+        "Créer src/pages/Payment.tsx (formulaire payment)",
+        "Créer src/pages/Tickets.tsx (liste tickets)",
+        "Créer src/components/Navbar.tsx",
+        "Créer src/App.tsx (React Router routes)",
+        "Créer src/index.tsx"
+      ]
+    },
+    {
+      "step": 16,
+      "title": "Implémenter Frontend - Client App",
+      "folder": "frontend/client-app/",
+      "actions": [
+        "Créer src/services/api.ts",
+        "Créer src/services/ticket.ts (getTicket() function)",
+        "Créer src/services/payment.ts (processPayment() function)",
+        "Créer src/pages/Home.tsx",
+        "Créer src/pages/TicketInfo.tsx",
+        "Créer src/pages/Payment.tsx",
+        "Créer src/components/TicketInfo.tsx",
+        "Créer src/components/PaymentForm.tsx",
+        "Créer src/App.tsx",
+        "Créer src/index.tsx"
+      ]
+    },
+    {
+      "step": 17,
+      "title": "Implémenter Frontend - Admin App",
+      "folder": "frontend/admin-app/",
+      "actions": [
+        "Créer src/services/api.ts",
+        "Créer src/services/admin.ts (getParkings, getTickets, getEmployees, updateTarifs)",
+        "Créer src/pages/Dashboard.tsx",
+        "Créer src/pages/Parkings.tsx (CRUD parkings)",
+        "Créer src/pages/Tickets.tsx (liste tickets)",
+        "Créer src/pages/Employees.tsx (CRUD employés)",
+        "Créer src/pages/Tarifs.tsx (configuration tarifs)",
+        "Créer src/pages/Reports.tsx (export CSV/PDF)",
+        "Créer src/App.tsx",
+        "Créer src/index.tsx"
+      ]
+    },
+    {
+      "step": 18,
+      "title": "Implémenter Docker - Orchestration",
+      "folder": "docker/",
+      "files": [
+        "docker-compose.yml (5 services: backend, postgres, agent-app, client-app, admin-app, nginx)",
+        "nginx/nginx.conf (reverse proxy: /api→backend, /agent→agent-app, /client→client-app, /admin→admin-app)"
+      ]
+    },
+    {
+      "step": 19,
+      "title": "Implémenter Backend - Docker",
+      "folder": "backend/",
+      "files": ["Dockerfile"],
+      "code": "FROM python:3.11-slim, WORKDIR /app, COPY requirements.txt, pip install, COPY ., CMD python main.py"
+    },
+    {
+      "step": 20,
+      "title": "Implémenter Frontend - Docker",
+      "folder": "frontend/agent-app/, frontend/client-app/, frontend/admin-app/",
+      "files": ["Dockerfile"],
+      "code": "FROM node:18, WORKDIR /app, COPY package.json, npm install, COPY ., npm run build, CMD npm run preview"
+    },
+    {
+      "step": 21,
+      "title": "Documentation",
+      "folder": "docs/",
+      "files": [
+        "api.md (Documentation API complète avec tous endpoints, request/response, examples)",
+        "frontend.md (Documentation frontend - composants, pages, services)",
+        "deployment.md (Documentation déploiement - Docker, production)"
+      ]
+    },
+    {
+      "step": 22,
+      "title": "README + Finitions",
+      "folder": "racine/",
+      "files": [
+        "README.md (Installation, lancement, usage)",
+        ".env.example (Variables d'environnement)",
+        ".gitignore"
+      ]
+    }
+  ],
+
+  "code_requirements": {
+    "backend": {
+      "must": [
+        "Type hints sur tous paramètres et returns (Python 3.11+)",
+        "Docstrings sur toutes les fonctions et classes",
+        "Architecture layered (interfaces → services → repositories → models)",
+        "Repository pattern pour database (CRUD encapsulé)",
+        "Service pattern pour business logic (CheckInService, CheckOutService, PaymentService)",
+        "Custom exceptions métier (pas de génériques)",
+        "Pydantic pour validation Request/Response",
+        "SQLAlchemy ORM (pas de SQL raw)",
+        "loguru pour logging (pas de print())",
+        "Async endpoints FastAPI",
+        "Tests pytest avec coverage > 80%"
+      ],
+      "must_not": [
+        "print() pour logging",
+        "Hardcode valeurs (utiliser settings)",
+        "SQL raw",
+        "Exceptions génériques (Exception, ValueError)",
+        "Code business dans routes API"
+      ]
+    },
+    "frontend": {
+      "must": [
+        "TypeScript strict (pas de any)",
+        "Interfaces TypeScript pour tous les types",
+        "Components React fonctionnels (pas de classes)",
+        "Hooks React (useState, useEffect, useMutation)",
+        "React Query pour data fetching",
+        "React Router pour navigation",
+        "Axios pour HTTP calls",
+        "CSS/modern UX (Tailwind ou styled-components)",
+        "Tests Vitest pour components",
+        "Env variables pour API_BASE_URL"
+      ],
+      "must_not": [
+        "any TypeScript",
+        "Components React classes",
+        "fetch() natif (utiliser axios)",
+        "Hardcode API URL (utiliser env)",
+        "State management complexe (Redux) - trop lourd"
+      ]
+    }
+  },
+
+  "quality_criteria": {
+    "backend": [
+      "✅ python -m pytest tests/ -v (tous tests passent)",
+      "✅ pytest --cov=src --cov-report=term-missing (coverage > 80%)",
+      "✅ python main.py (FastAPI serveur lancé)",
+      "✅ http://localhost:8000/docs (OpenAPI docs visibles)",
+      "✅ curl -X POST http://localhost:8000/api/check-in {...} (check-in fonctionne)",
+      "✅ curl -X POST http://localhost:8000/api/payment {...} (payment fonctionne)",
+      "✅ Code sans erreurs, PEP8 compliant",
+      "✅ Type hints sur toutes fonctions",
+      "✅ Docstrings sur toutes fonctions"
+    ],
+    "frontend": [
+      "✅ npm run dev (Vite serveur lancé)",
+      "✅ http://localhost:3000 (Agent App visible)",
+      "✅ http://localhost:3001 (Client App visible)",
+      "✅ http://localhost:3002 (Admin App visible)",
+      "✅ Check-In form submit (API call réussi)",
+      "✅ Payment form submit (API call réussi)",
+      "✅ TypeScript no errors (tsc --noEmit)",
+      "✅ npm test (Vitest tests passent)",
+      "✅ Modern UX, responsive"
+    ],
+    "docker": [
+      "✅ docker-compose up --build (tous services lancés)",
+      "✅ docker-compose ps (5 services running)",
+      "✅ http://localhost:80/api (Backend accessible via nginx)",
+      "✅ http://localhost:80/agent (Agent App accessible)",
+      "✅ http://localhost:80/client (Client App accessible)",
+      "✅ http://localhost:80/admin (Admin App accessible)"
+    ]
+  },
+
+  "constraints": {
+    "backend": {
+      "database": "PostgreSQL (pas SQLite pour production)",
+      "auth": "JWT optional (pas prioritaire)",
+      "payment_gateway": "Simulé (pas intégration Stripe/PayPal)",
+      "caching": "Pas Redis (optionnel)",
+      "websocket": "Pas nécessaire (REST uniquement)"
+    },
+    "frontend": {
+      "css": "Tailwind CSS ou styled-components",
+      "state": "React Hooks uniquement (pas Redux)",
+      "forms": "React Hook Form (optionnel)",
+      "i18n": "Français uniquement (pas multilingue)",
+      "auth": "Pas de login/inscription (optionnel)"
+    }
+  },
+
+  "environment_variables": {
+    "backend": {
+      "DATABASE_URL": "postgresql://parking:user@localhost/parking_db",
+      "APP_NAME": "Parking Management System",
+      "APP_VERSION": "1.0.0",
+      "LOG_LEVEL": "INFO",
+      "TARIF_HORAIRE": "500.0",
+      "TARIF_JOURNALIER": "3000.0",
+      "DELAI_GRACE": "15",
+      "TAXE_PARKING": "0.10",
+      "JWT_SECRET": "your-secret-key-change-this",
+      "JWT_ALGORITHM": "HS256"
+    },
+    "frontend": {
+      "API_BASE_URL": "http://localhost:8000"
+    }
+  },
+
+  "api_examples": {
+    "check_in": {
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/check-in",
+        "body": {
+          "plate_number": "ABC123",
+          "parking_id": 1,
+          "vehicle_type": "sedan",
+          "owner_name": "John Doe"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "ticket_id": "TKT-2024-001",
+          "place_number": "P-101",
+          "entry_time": "2024-01-15T10:30:00",
+          "message": "Véhicule entré avec succès"
+        }
+      }
+    },
+    "check_out": {
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/check-out",
+        "body": {
+          "ticket_id": "TKT-2024-001"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "ticket_id": "TKT-2024-001",
+          "duration_minutes": 45,
+          "amount": 750.0,
+          "exit_time": "2024-01-15T11:15:00",
+          "message": "Amount à payer: 750 FC"
+        }
+      }
+    },
+    "payment": {
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/payment",
+        "body": {
+          "ticket_id": "TKT-2024-001",
+          "payment_method": "cash"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "ticket_id": "TKT-2024-001",
+          "amount": 750.0,
+          "payment_method": "cash",
+          "transaction_id": "TXN-2024-001",
+          "message": "Paiement accepté"
+        }
+      }
+    }
+  },
+
+  "notes_for_ai": [
+    "PRIORITÉ 1: Backend API REST complète ET fonctionnelle",
+    "PRIORITÉ 2: Frontend Agent App (le plus important)",
+    "PRIORITÉ 3: Frontend Client App + Admin App",
+    "Code complet - PAS de placeholders, PAS de TODO",
+    "Backend FastAPI async endpoints",
+    "Frontend React TypeScript strict",
+    "Tests pytest backend + Vitest frontend",
+    "Docker-compose pour orchestration",
+    "Business rules appliquées correctement (tarifs, exceptions)",
+    "Type hints Python + TypeScript strict",
+    "Docstrings Python + Interfaces TypeScript",
+    "Repository pattern + Service pattern",
+    "Pydantic validation + Pydantic Settings",
+    "loguru logging (pas print())",
+    "React Query pour data fetching",
+    "Axios pour HTTP calls",
+    "React Router pour navigation",
+    "Custom exceptions métier",
+    "SQLAlchemy ORM (pas SQL raw)",
+    "Modern UX frontend (Tailwind ou styled-components)",
+    "Documentation API complète",
+    "README.md installation + usage"
+  ],
+
+  "output_format": {
+    "structure": "Maintenir l'arborescence exacte définie",
+    "files": "Un fichier par message si trop long, ou batch par dossier",
+    "code": "Code complet et fonctionnel, pas de commentaires inutiles",
+    "comments": "Docstrings essentiels uniquement",
+    "format": "Fichiers avec extension (.py, .tsx, .ts, .json, .yml, .md)"
+  }
+}
