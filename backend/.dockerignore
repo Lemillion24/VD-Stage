@@ -8,4 +8,4 @@ venv/
 logs/
 .pytest_cache/
 tests/
-seed.py
+# seed.py is needed at runtime for docker compose exec

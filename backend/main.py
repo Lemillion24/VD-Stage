@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
 
@@ -34,12 +35,13 @@ app = FastAPI(
     openapi_url="/openapi.json" if settings.DEBUG else None,
 )
 
+origins_str = os.environ.get("CORS_ORIGINS", "*")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_origins=origins_str.split(",") if origins_str != "*" else ["*"],
+    allow_credentials=origins_str != "*",
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(api_router)

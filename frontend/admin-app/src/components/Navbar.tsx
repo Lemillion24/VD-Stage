@@ -13,7 +13,7 @@ export default function Navbar() {
   const location = useLocation();
 
   const logout = async () => {
-    await fetch(`${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000"}/api/auth/logout`, { method: "POST", credentials: "include" });
+    await fetch(`${import.meta.env.VITE_API_BASE_URL ?? ""}/api/auth/logout`, { method: "POST", credentials: "include" });
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     window.location.href = "/";
