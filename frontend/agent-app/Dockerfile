@@ -5,10 +5,11 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY agent-app/package.json agent-app/package-lock.json ./
 RUN npm install
 
-COPY . .
+COPY agent-app/ .
+COPY shared/ /shared/
 
 RUN npm run build
 

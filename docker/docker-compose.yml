@@ -35,8 +35,8 @@ services:
 
   agent-app:
     build:
-      context: ../frontend/agent-app
-      dockerfile: Dockerfile
+      context: ../frontend
+      dockerfile: agent-app/Dockerfile
       args:
         VITE_API_BASE_URL: ""
     container_name: parking-agent
@@ -47,8 +47,8 @@ services:
 
   client-app:
     build:
-      context: ../frontend/client-app
-      dockerfile: Dockerfile
+      context: ../frontend
+      dockerfile: client-app/Dockerfile
       args:
         VITE_API_BASE_URL: ""
     container_name: parking-client
@@ -59,8 +59,8 @@ services:
 
   admin-app:
     build:
-      context: ../frontend/admin-app
-      dockerfile: Dockerfile
+      context: ../frontend
+      dockerfile: admin-app/Dockerfile
       args:
         VITE_API_BASE_URL: ""
     container_name: parking-admin
