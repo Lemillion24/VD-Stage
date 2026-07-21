@@ -13,7 +13,7 @@ function App() {
   if (!token) return <Login role="Agent" />;
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/agent">
       <div className="min-h-screen bg-white">
         <Navbar />
         <main className="mx-auto px-6 py-6" style={{ maxWidth: "1280px" }}>
